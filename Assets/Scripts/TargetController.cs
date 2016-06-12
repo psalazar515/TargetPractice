@@ -5,10 +5,16 @@ public class TargetController : MonoBehaviour
 {
     Animation targetAnimation;
 
+    AudioSource audioSource;
+    public AudioClip target_hit;
+    float audioVolume;
+
     bool hit = false;
     bool initialized = false;
 
+    int scoreMultiplier;
     float speed;
+    float deathDestroyDelay = 1f;
 
     Vector3 spawnPoint;
     Vector3 targetPoint;
@@ -16,6 +22,7 @@ public class TargetController : MonoBehaviour
     void Start()
     {
         targetAnimation = GetComponent<Animation>();
+        audioSource = GetComponent<AudioSource>();
     }
 	
 	// Updates
@@ -25,10 +32,13 @@ public class TargetController : MonoBehaviour
         {
             transform.position = Vector3.MoveTowards(transform.position, targetPoint, Time.deltaTime * speed);
 
-            if (Vector3.Distance(transform.position, targetPoint) < 0.1f)
+            if (Vector3.Distance(transform.position, targetPoint) < 0.1f || deathDestroyDelay < 0)
             {
                 Destroy(gameObject);
             }
+
+            if (hit)
+                deathDestroyDelay -= Time.deltaTime;
         }
 	}
 
@@ -38,17 +48,22 @@ public class TargetController : MonoBehaviour
         if (collision.collider.gameObject.tag == "Ball" && !hit)
         {
             targetAnimation.Play("TargetHit");
-            GameController.Score();
+            audioSource.PlayOneShot(target_hit, audioVolume);
+            GameController.Score(scoreMultiplier);
             hit = true;
         }
     }
 
     //Public Methods
-    public void InitializeTarget(Vector3 spawnPoint, Vector3 targetPoint, float speed)
+    public void InitializeTarget(Vector3 spawnPoint, Vector3 targetPoint, float speed, int scoreMultiplier)
     {
         this.spawnPoint = spawnPoint;
         this.targetPoint = targetPoint;
         this.speed = speed;
+        this.scoreMultiplier = scoreMultiplier;
+
+        audioVolume = 1 - (scoreMultiplier * 0.3f);
+
         initialized = true;
     }
 

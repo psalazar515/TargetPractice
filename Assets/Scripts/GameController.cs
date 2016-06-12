@@ -17,9 +17,9 @@ public class GameController : MonoBehaviour
 	
 	}
 
-    static public void Score()
+    static public void Score(int scoreMultiplier)
     {
-        score++;
+        score += scoreMultiplier;
         Debug.Log(score);
     }
 }

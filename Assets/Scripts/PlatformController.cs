@@ -10,22 +10,29 @@ public class PlatformController : MonoBehaviour
     public float maxTargetSpeed;
     public float minTargetSpawnDelay;
     public float maxTargetSpawnDelay;
+    public float minChangeDirectionDelay;
+    public float maxChangeDirectionDelay;
 
+    public int scoreMultiplier;
     public GameObject target_prefab;
 
     //Private Vars
     int numTargets;
+    int numTargetsSpawned;
     float targetSpeed;
     float targetSpawnDelay;
+    float targetSpawnDelayRemaining;
+    float changeDirectionDelay;
+    float changeDirectionDelayRemaining;
 
-    float delayRemaining;
-
-    bool active = false;
-    bool targetDirectionChanged = false;
+    bool targetDirectionChanged;
 
     //Spawn Points
     Vector3 leftSpawn;
     Vector3 rightSpawn;
+
+    Vector3 targetSpawnPoint;
+    Vector3 targetEndPoint;
 
     //List of Targets
     ArrayList targetList = new ArrayList();
@@ -39,42 +46,70 @@ public class PlatformController : MonoBehaviour
 	void Update()
     {
         CleanTargetList();
-        if (targetList.Count == 0)
-            active = false;
 
-        if (!active)
+        //Check if platform should be reset
+        if (targetList.Count == 0)
         {
-            Randomize();
-            targetList.Add(SpawnTarget());
-            active = true;
+            ResetPlatform();
+            SpawnTarget();
         }
+        //Check if platform is still spawning targets
+        else if (numTargetsSpawned < numTargets)
+        {
+            targetSpawnDelayRemaining -= Time.deltaTime;
+
+            if (targetSpawnDelayRemaining < 0)
+            {
+                SpawnTarget();
+                targetSpawnDelayRemaining = targetSpawnDelay;
+            }
+        }
+        //Control Direction Change
         else
         {
-            delayRemaining -= Time.deltaTime;
-            if (delayRemaining < 0 && !targetDirectionChanged)
+            changeDirectionDelayRemaining -= Time.deltaTime;
+            if (changeDirectionDelayRemaining < 0 && !targetDirectionChanged)
             {
-                Debug.Log("SignalChangeDirection");
                 SignalChangeDirection();
                 targetDirectionChanged = true;
             }
         }
-        Debug.Log("Num Targets: " + numTargets);
-        Debug.Log("Target Speed: " + targetSpeed);
-        Debug.Log("Target Spawn Delay: " + targetSpawnDelay);
     }
 
     //*****************
     // Helper Methods
     //*****************
-    void Randomize()
+
+    void ResetPlatform()
     {
+        //Generate Random Values
         numTargets = Random.Range(minNumTargets, maxNumTargets);
         targetSpeed = Random.Range(minTargetSpeed, maxTargetSpeed);
         targetSpawnDelay = Random.Range(minTargetSpawnDelay, maxTargetSpawnDelay);
+        changeDirectionDelay = Random.Range(minChangeDirectionDelay, maxChangeDirectionDelay);
 
-        delayRemaining = targetSpawnDelay;
+        //Randomize Spawn Point
+        if (Random.value < 0.5f)
+        {
+            targetSpawnPoint = leftSpawn;
+            targetEndPoint = rightSpawn;
+        }
+        else
+        {
+            targetSpawnPoint = rightSpawn;
+            targetEndPoint = leftSpawn;
+        }
+
+        //Reset Timers
+        targetSpawnDelayRemaining = targetSpawnDelay;
+        changeDirectionDelayRemaining = changeDirectionDelay;
+
+        //Reset Variables
+        targetDirectionChanged = false;
+        numTargetsSpawned = 0;
     } 
 
+    //Removes destroyed targets from the targetList
     void CleanTargetList()
     {
         for(int i = 0; i < targetList.Count; i++)
@@ -86,15 +121,15 @@ public class PlatformController : MonoBehaviour
     //******************
     // Target Controls 
     //******************
-    GameObject SpawnTarget()
+    void SpawnTarget()
     {
-        Vector3 spawnPoint = leftSpawn;
-        Vector3 targetPoint = rightSpawn;
-
-        GameObject target = (GameObject)Instantiate(target_prefab, spawnPoint, Quaternion.identity);
+        GameObject target = (GameObject)Instantiate(target_prefab, targetSpawnPoint, Quaternion.identity);
         TargetController target_controller = target.GetComponent<TargetController>();
-        target_controller.InitializeTarget(spawnPoint, targetPoint, targetSpeed);
-        return target;
+        target_controller.InitializeTarget(targetSpawnPoint, targetEndPoint, targetSpeed, scoreMultiplier);
+
+        targetList.Add(target);
+        numTargetsSpawned++;
+        targetSpawnDelayRemaining = targetSpawnDelay;
     }
 
     void SignalChangeDirection()

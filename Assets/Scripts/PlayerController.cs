@@ -8,12 +8,14 @@ public class PlayerController : MonoBehaviour
     public float mouseRangeX = 45f;
     public float mouseRangeY = 30f;
     public float throwSpeed = 50f;
+    public float throwDelay = 0.5f;
 
     public GameObject ball_prefab;
 
     //Local Vars
     float rotMouseX = 0;
     float rotMouseY = 0;
+    float throwDelayRemaining;
 
     GameObject ball;
     
@@ -21,15 +23,20 @@ public class PlayerController : MonoBehaviour
 	void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
+        throwDelayRemaining = throwDelay;
 	}
 	
     //Updates
 	void Update()
     {
         Aim();
+        throwDelayRemaining -= Time.deltaTime;
 
-        if (Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Fire1") && throwDelayRemaining < 0)
+        {
             Fire();
+            throwDelayRemaining = throwDelay;
+        }
 	}
 
     //Helper Functions
