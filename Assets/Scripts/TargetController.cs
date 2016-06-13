@@ -45,7 +45,7 @@ public class TargetController : MonoBehaviour
     //Gets hit by ball
     void OnCollisionEnter(Collision collision)
     {
-        if (collision.collider.gameObject.tag == "Ball" && !hit)
+        if (collision.collider.gameObject.tag == "ball" && !hit)
         {
             targetAnimation.Play("TargetHit");
             audioSource.PlayOneShot(target_hit, audioVolume);
