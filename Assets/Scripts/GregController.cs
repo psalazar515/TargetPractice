@@ -7,6 +7,7 @@ public class GregController : MonoBehaviour
     Animation gregAnimation;
     Animator anim;
     public AudioClip ewh;
+    public AudioClip pew;
 
     float volume = 0.2f;
 
@@ -21,7 +22,14 @@ public class GregController : MonoBehaviour
     {
         if (collision.collider.gameObject.tag == "ball")
         {
-            EwhAnimation();
+            if (Random.value < 0.5f)
+            {
+                PewAnimation();
+            }
+            else
+            {
+                EwhAnimation();
+            }
         }
     }
 
@@ -31,5 +39,11 @@ public class GregController : MonoBehaviour
     {
         anim.SetTrigger("greg_ewh");
         audioSource.PlayOneShot(ewh, volume);
+    }
+
+    void PewAnimation()
+    {
+        anim.SetTrigger("greg_ewh");
+        audioSource.PlayOneShot(pew, volume);
     }
 }
